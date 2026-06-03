@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  Sistema de Registro de Eventos
+  Autor:    Billy Salmerón y Issac Merchán
+  Fecha:    2026-05-28
+  Versión:  1.0.0
+  Tema:  Auditoría y Control de Calidad ISO 9001
+  Descripción: Aplicación web para gestionar eventos académicos
+               e institucionales con autenticación de usuarios.
+  ============================================================
+-->
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Registro de Eventos</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ====== CABECERA ====== -->
+  <header>
+    <div class="brand">
+      <span class="brand-name">Eventos<span>Hub</span></span>
+    </div>
+    <div id="header-user" style="display:none">
+      <span id="lbl-user-header"></span>
+      <button class="btn btn-secondary btn-sm" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- ====== PANTALLA: AUTENTICACIÓN ====== -->
+  <div id="screen-auth" class="screen active">
+    <main>
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <h2>Bienvenido</h2>
+          <p>Accede o regístrate para gestionar eventos.</p>
+
+          <!-- Tabs login/registro -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+            <button class="auth-tab" onclick="switchAuthTab('register')">Registrarse</button>
+          </div>
+
+          <!-- Mensajes globales -->
+          <div id="auth-msg" class="msg"></div>
+
+          <!-- FORMULARIO LOGIN -->
+          <div id="form-login">
+            <div class="form-group">
+              <label for="login-email">Correo electrónico</label>
+              <input type="email" id="login-email" placeholder="usuario@ejemplo.com" />
+            </div>
+            <div class="form-group">
+              <label for="login-pass">Contraseña</label>
+              <input type="password" id="login-pass" placeholder="••••••••" />
+            </div>
+            <button class="btn btn-primary" onclick="handleLogin()">Entrar</button>
+          </div>
+
+          <!-- FORMULARIO REGISTRO -->
+          <div id="form-register" style="display:none">
+            <div class="form-group">
+              <label for="reg-name">Nombre completo</label>
+              <input type="text" id="reg-name" placeholder="Juan Pérez" />
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Correo electrónico</label>
+              <input type="email" id="reg-email" placeholder="usuario@ejemplo.com" />
+            </div>
+            <div class="form-group">
+              <label for="reg-pass">Contraseña (mín. 6 caracteres)</label>
+              <input type="password" id="reg-pass" placeholder="••••••••" />
+            </div>
+            <div class="form-group">
+              <label for="reg-pass2">Confirmar contraseña</label>
+              <input type="password" id="reg-pass2" placeholder="••••••••" />
+            </div>
+            <button class="btn btn-primary" onclick="handleRegister()">Crear cuenta</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ====== PANTALLA: APP PRINCIPAL ====== -->
+  <div id="screen-app" class="screen">
+    <main>
+      <div class="app-grid">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <h3>Mi cuenta</h3>
+          <div class="sidebar-info">
+            <p><strong id="sb-name">—</strong></p>
+            <p id="sb-email" style="word-break:break-all"></p>
+            <p id="sb-role"></p>
+          </div>
+          <hr class="divider" />
+          <h3 style="font-size:.95rem; margin-bottom:12px; color:var(--muted)">Estadísticas</h3>
+          <div class="stat-row"><span class="stat-label">Total eventos</span><span class="stat-val"
+              id="stat-total">0</span></div>
+          <div class="stat-row"><span class="stat-label">Académicos</span><span class="stat-val" id="stat-acad">0</span>
+          </div>
+          <div class="stat-row"><span class="stat-label">Institucionales</span><span class="stat-val"
+              id="stat-inst">0</span></div>
+          <div class="stat-row"><span class="stat-label">Usuarios</span><span class="stat-val" id="stat-users">0</span>
+          </div>
+        </aside>
+
+        <!-- Panel -->
+        <section>
+          <div class="panel-header">
+            <h2>Gestión de Eventos</h2>
+            <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo evento</button>
+          </div>
+
+          <div class="view-tabs">
+            <button class="view-tab active" onclick="switchView('events', this)">Eventos</button>
+            <button class="view-tab" onclick="switchView('users', this)" id="tab-users">Usuarios</button>
+          </div>
+
+          <!-- Vista eventos -->
+          <div id="view-events">
+            <div id="events-msg" class="msg"></div>
+            <div class="events-grid" id="events-grid"></div>
+          </div>
+
+          <!-- Vista usuarios (solo admin) -->
+          <div id="view-users" style="display:none">
+            <div class="user-list" id="users-list"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ====== MODAL: CREAR/EDITAR EVENTO ====== -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Nuevo Evento</h3>
+      <div id="modal-msg" class="msg"></div>
+
+      <div class="form-group">
+        <label for="ev-titulo">Título del evento *</label>
+        <input type="text" id="ev-titulo" placeholder="Ej: Conferencia de IA 2025" maxlength="80" />
+      </div>
+      <div class="form-group">
+        <label for="ev-cat">Categoría *</label>
+        <select id="ev-cat">
+          <option value="">— Selecciona —</option>
+          <option value="academico">Académico</option>
+          <option value="institucional">Institucional</option>
+          <option value="deportivo">Deportivo</option>
+          <option value="cultural">Cultural</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="ev-fecha">Fecha *</label>
+        <input type="date" id="ev-fecha" />
+      </div>
+      <div class="form-group">
+        <label for="ev-lugar">Lugar *</label>
+        <input type="text" id="ev-lugar" placeholder="Ej: Auditorio Principal" maxlength="60" />
+      </div>
+      <div class="form-group">
+        <label for="ev-desc">Descripción</label>
+        <textarea id="ev-desc" placeholder="Breve descripción del evento..." maxlength="300"></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveEvent()">Guardar</button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+
+</html>
